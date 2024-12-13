@@ -1,0 +1,43 @@
+trigger:
+- main  # Replace 'main' with your branch name
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+# 1. Install dependencies
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '6.x'  # Use your .NET version
+    installationPath: $(Agent.ToolsDirectory)/dotnet
+
+# 2. Restore dependencies
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+
+# 3. Build solution
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
+
+# 4. Run unit tests
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '**/unit-tests/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --no-build --verbosity normal'
+
+# 5. Publish web app (optional)
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    projects: '**/web-app/*.csproj'
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
